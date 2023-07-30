@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import os
 
 class MultiValueDict:
     def __init__(self) -> None:
@@ -34,7 +35,7 @@ class FileCache:
     def _add_file_to_caches(self, path: Path, files_root: Path):
         if path.is_file():
             name = path.name
-            path_str = str(path) #path.relative_to(files_root).
+            path_str = os.path.relpath(path, files_root)
             # Add file name to caches
             for cache in self.caches:
                 cache.append(name, path_str)

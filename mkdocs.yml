@@ -11,7 +11,12 @@ nav:
 
 plugins:
 - search
-- crosslink
+- crosslink:
+    crosslinks:
+    - name: alpha
+      source_dir: site_a/docs
+      target_url: https://example.com/
+      directory_urls: True
 
 # SEE https://squidfunk.github.io/mkdocs-material/reference/admonitions/
 markdown_extensions:
