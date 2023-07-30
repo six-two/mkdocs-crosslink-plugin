@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 # pip dependency
 import mkdocs
 from mkdocs.config.config_options import Type
@@ -11,6 +12,7 @@ from mkdocs.structure.files import Files
 from . import warning
 from .file_cache import FileCache
 from .config import parse_crosslinks_list
+from .replacer import Replacer
 
 
 class CrosslinkPluginConfig(Config):
@@ -32,29 +34,20 @@ class CrosslinkPlugin(BasePlugin[CrosslinkPluginConfig]):
         warning("Hello, World!")
         self.crosslinks = parse_crosslinks_list(self.config.crosslinks, "crosslinks")
 
+        #@Todo: use crosslinks
         warning(f"config file: '{config.config_file_path}'")
         root_dir = Path(config.config_file_path).parent
         file_root = root_dir / "site_a" / "docs"
         fc = FileCache(file_root)
         warning(f"cache: {fc}")
 
-        return config
+        #@TODO: move to replacer
+        for crosslink in self.crosslinks:
+            search_target = f"{self.config.prefix}{crosslink.name}{self.config.suffix}"
 
-    # @event_priority(50)
-    # # Earlier than most other plugins so that other link plugins will not receive data intended for this plugin
-    # # SEE https://www.mkdocs.org/dev-guide/plugins/#event-priorities
-    # def on_page_markdown(self, markdown: str, page: Page, config: MkDocsConfig, files: Files) -> str:
-    #     """
-    #     The page_markdown event is called after the page's markdown is loaded from file and can be used to alter the Markdown source text. The meta- data has been stripped off and is available as page.meta at this point.
-    #     """
-    #     try:
-    #         # We replace the links with a custom protocol, since otherwise we would get warnings like the following:
-    #         # WARNING  -  Documentation file 'index.md' contains a link to '@a:page_a.md' which is not found in the documentation files.
-    #         for key in self.crosslinks:
-    #             markdown = markdown.replace(f"@{key}:", f"crosslink://{key}:")
-    #         return markdown
-    #     except Exception as error:
-    #         raise mkdocs.exceptions.PluginError(str(error))
+
+        self.replacer = Replacer()
+        return config
 
 
     # @event_priority(50)
@@ -66,10 +59,9 @@ class CrosslinkPlugin(BasePlugin[CrosslinkPluginConfig]):
         See: https://www.mkdocs.org/dev-guide/plugins/#on_page_content
         """
         try:
-            warning("TODO: search for <a href='X'... and <img src='X'...\nShould either use HTML parser or proper regex")
-            # Undo replacement for anything that was not a link?
-            for key in self.crosslinks:
-                html = html.replace(f"crosslink://{key}:", f"@{key}:")
+            self.replacer.handle_page(html)
+                
+
             return html
         except Exception as error:
             raise mkdocs.exceptions.PluginError(str(error))
