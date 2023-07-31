@@ -22,7 +22,8 @@ class FileCache:
     def __init__(self, files_root: Path, max_extension_count: int = 5) -> None:
         # A list of caches: 0 -> full file name, 1 -> without first file extension, 2 -> without second file extension, ...
         # The caches will be searched in that order. Thus for example searching for "jquery" would return "jquery.min.js".
-        self.caches = [MultiValueDict() for _ in range(max_extension_count)]
+        self.files_root = files_root
+        self._caches = [MultiValueDict() for _ in range(max_extension_count)]
 
         if not files_root.exists():
             raise Exception(f"Directory '{files_root}' does not exist")
@@ -37,7 +38,7 @@ class FileCache:
             name = path.name
             path_str = os.path.relpath(path, files_root)
             # Add file name to caches
-            for cache in self.caches:
+            for cache in self._caches:
                 cache.append(name, path_str)
                 # remove the last extension from the name
                 parts = name.rsplit(".", 1)
@@ -50,7 +51,7 @@ class FileCache:
     def get(self, key: str) -> list[str]:
         # Search the caches: first interpret it as a full file name, then as a file name without the last extension, then a filename without the last two extensions, etc
         # So for example "jquery" would match "jquery", "jquery.js", "jquery.min.js", and finally "jquery.min.js.bak" in that order
-        for cache in self.caches:
+        for cache in self._caches:
             if result := cache.get(key):
                 return result
         
@@ -58,5 +59,5 @@ class FileCache:
         return []
     
     def __str__(self) -> str:
-        return "<FileCache>" + "".join([f"\t\nLevel {index}: {cache}" for index, cache in enumerate(self.caches)]) + "\n</FileCache>"
+        return "<FileCache>" + "".join([f"\t\nLevel {index}: {cache}" for index, cache in enumerate(self._caches)]) + "\n</FileCache>"
 

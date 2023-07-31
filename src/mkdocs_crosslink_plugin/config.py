@@ -2,6 +2,9 @@ from functools import wraps
 import json
 from pathlib import Path
 from typing import NamedTuple, Any, Callable
+# pip dependencies
+from mkdocs.config.base import Config
+from mkdocs.config.config_options import Type
 # local
 from . import warning
 
@@ -11,6 +14,14 @@ CROSSLINK_FIELDS = {
     "target_url",
     "directory_urls"
 }
+
+class CrosslinkPluginConfig(Config):
+    enabled = Type(bool, default=True)
+    # Default pattern: x-NAME://link
+    # This makes it look like a custom protocol, so no warnings should be raised
+    prefix = Type(str, default="x-")
+    suffix = Type(str, default=":")
+    crosslinks = Type(list, default=[])
 
 
 class ConfigError(Exception):

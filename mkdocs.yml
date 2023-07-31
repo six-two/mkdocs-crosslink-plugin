@@ -17,6 +17,12 @@ plugins:
       source_dir: site_a/docs
       target_url: https://example.com/
       directory_urls: True
+    # For causing errors (ambiguous protocol), do not do this in reallity
+    - name: "alpha:2"
+      source_dir: site_a/docs
+      target_url: https://example2.com/
+      directory_urls: True
+
 
 # SEE https://squidfunk.github.io/mkdocs-material/reference/admonitions/
 markdown_extensions:

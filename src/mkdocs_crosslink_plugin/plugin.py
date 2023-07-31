@@ -11,17 +11,8 @@ from mkdocs.structure.files import Files
 # local files
 from . import warning
 from .file_cache import FileCache
-from .config import parse_crosslinks_list
+from .config import parse_crosslinks_list, CrosslinkPluginConfig
 from .replacer import Replacer
-
-
-class CrosslinkPluginConfig(Config):
-    enabled = Type(bool, default=True)
-    # Default pattern: x-NAME://link
-    # This makes it look like a custom protocol, so no warnings should be raised
-    prefix = Type(str, default="x-")
-    suffix = Type(str, default="://")
-    crosslinks = Type(list, default=[])
 
 
 class CrosslinkPlugin(BasePlugin[CrosslinkPluginConfig]):
@@ -30,23 +21,9 @@ class CrosslinkPlugin(BasePlugin[CrosslinkPluginConfig]):
         Called once when the config is loaded.
         It will make modify the config and initialize this plugin.
         """
-        # Make sure that the CSS and JS badge files are included on every page
-        warning("Hello, World!")
         self.crosslinks = parse_crosslinks_list(self.config.crosslinks, "crosslinks")
 
-        #@Todo: use crosslinks
-        warning(f"config file: '{config.config_file_path}'")
-        root_dir = Path(config.config_file_path).parent
-        file_root = root_dir / "site_a" / "docs"
-        fc = FileCache(file_root)
-        warning(f"cache: {fc}")
-
-        #@TODO: move to replacer
-        for crosslink in self.crosslinks:
-            search_target = f"{self.config.prefix}{crosslink.name}{self.config.suffix}"
-
-
-        self.replacer = Replacer()
+        self.replacer = Replacer(self.crosslinks, self.config)
         return config
 
 
@@ -59,7 +36,7 @@ class CrosslinkPlugin(BasePlugin[CrosslinkPluginConfig]):
         See: https://www.mkdocs.org/dev-guide/plugins/#on_page_content
         """
         try:
-            self.replacer.handle_page(html)
+            html = self.replacer.handle_page(page.file.src_path, html)
                 
 
             return html
