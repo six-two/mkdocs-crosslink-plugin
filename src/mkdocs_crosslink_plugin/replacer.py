@@ -67,6 +67,9 @@ class Replacer():
             # Perfect, only one fake protocol / is left. So let's replace it
             crosslink_name = proto_names[0]
             new_url = self.resolve_crosslink(file_name, url, crosslink_name)
+            new_url = self.update_file_url_if_needed(new_url, crosslink_name)
+
+            # update the URL
             updated_tag = html[start:end].replace(url, new_url)
             html = html[:start] + updated_tag + html[end:]
             return (html, start + len(updated_tag))
@@ -99,6 +102,27 @@ class Replacer():
         else:
             # It is an absolute path -> disregard the lookup rules and take it at face value
             return join_url(base_url, file_path)
+
+    def update_file_url_if_needed(self, url: str, crosslink_name: str) -> str:
+        lower_url = url.lower()
+        if lower_url.endswith(".md"):
+            # We have a link to a markdown file, so we need to link to the .HTML version instead
+            # Cut of the last three characters: "".md"
+            url_without_extension = url[:-3]
+            if self.crosslinks[crosslink_name].use_directory_urls:
+                # Link to the directory
+                if lower_url.endswith("/index.md"):
+                    # Remove the file name ('index'), so that we point to the directory
+                    return url_without_extension[:-5]
+                else:
+                    return url_without_extension + "/"
+            else:
+                # Link to the html file directly
+                return url_without_extension + ".html"
+        else:
+            # Normal file, return it unmodified
+            return url
+
 
 def join_url(base_url: str, path: str):
     # Prepare base_url (ends with /) and path (does not start with slash)

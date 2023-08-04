@@ -15,13 +15,17 @@ plugins:
     crosslinks:
     - name: alpha
       source_dir: site_a/docs
-      target_url: https://example.com/
-      directory_urls: True
+      target_url: http://localhost:8000/site_a/
+      use_directory_urls: False
     # For causing errors (ambiguous protocol), do not do this in reallity
     - name: "alpha:2"
       source_dir: site_a/docs
-      target_url: https://example2.com/
-      directory_urls: True
+      target_url: http://two.localhost:8000/site_a/
+      use_directory_urls: True
+    - name: "bravo"
+      source_dir: site_b/docs
+      target_url: http://localhost:8000/site_b
+      use_directory_urls: True
 
 
 # SEE https://squidfunk.github.io/mkdocs-material/reference/admonitions/

@@ -12,7 +12,7 @@ CROSSLINK_FIELDS = {
     "name",
     "source_dir",
     "target_url",
-    "directory_urls"
+    "use_directory_urls"
 }
 
 class CrosslinkPluginConfig(Config):
@@ -48,7 +48,7 @@ class CrosslinkSite(NamedTuple):
     # Use directory URLs?
     # yes: test.md -> test/
     # no: test.md -> test.html
-    directory_urls: bool
+    use_directory_urls: bool
 
 
 def add_problematic_data_to_exceptions(function: Callable) -> Callable:
@@ -85,12 +85,12 @@ def parse_crosslink(data: Any, location: str) -> CrosslinkSite:
     name = get_string(data, "name")
     source_dir = get_directory_path(data, "source_dir")
     target_url = get_string(data, "target_url")
-    directory_urls = get_bool(data, "directory_urls")
+    use_directory_urls = get_bool(data, "use_directory_urls")
 
     if not (target_url.startswith("https://") or target_url.startswith("http://")):
         warning(f"URL '{target_url}' should probably start with 'https://' (or 'http://')")
 
-    return CrosslinkSite(name=name, source_dir=source_dir, target_url=target_url, directory_urls=directory_urls)
+    return CrosslinkSite(name=name, source_dir=source_dir, target_url=target_url, use_directory_urls=use_directory_urls)
 
 
 def get_string(data: dict, name: str) -> str:
