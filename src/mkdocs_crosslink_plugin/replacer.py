@@ -3,9 +3,9 @@ from pathlib import Path
 import re
 import urllib
 # local files
-from . import warning
+from . import warning, debug
 from .file_cache import FileCache
-from .config import parse_crosslinks_list, CrosslinkSite, CrosslinkPluginConfig
+from .config import CrosslinkSite, CrosslinkPluginConfig
 
 
 def create_html_attribute_regex_patterns(tag: str, attribute: str) -> list[str]:
@@ -34,6 +34,7 @@ class Replacer():
         for crosslink in crosslink_list:
             self.full_name[crosslink.name] = f"{config.prefix}{crosslink.name}{config.suffix}"
             self.caches[crosslink.name] = FileCache(crosslink.source_dir)
+            debug(f"Cache for '{crosslink.name}': {self.caches[crosslink.name]}")
 
 
     def handle_page(self, file_name: str, html: str) -> str:
@@ -67,10 +68,11 @@ class Replacer():
             # Perfect, only one fake protocol / is left. So let's replace it
             crosslink_name = proto_names[0]
             new_url = self.resolve_crosslink(file_name, url, crosslink_name)
-            new_url = self.update_file_url_if_needed(new_url, crosslink_name)
+            new_url_updated = self.update_file_url_if_needed(new_url, crosslink_name)
+            debug(f"Resolving: {url} -> {new_url} -> {new_url_updated}")
 
             # update the URL
-            updated_tag = html[start:end].replace(url, new_url)
+            updated_tag = html[start:end].replace(url, new_url_updated)
             html = html[:start] + updated_tag + html[end:]
             return (html, start + len(updated_tag))
         else:

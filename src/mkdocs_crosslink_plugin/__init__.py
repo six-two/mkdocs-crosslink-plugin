@@ -3,6 +3,9 @@ import logging
 # Set up a logger for my code to use
 LOGGER = logging.getLogger("mkdocs.plugins.crosslink")
 
+def debug(message: str) -> None:
+    LOGGER.debug(f"[crosslink] {message}")
+
 def warning(message: str) -> None:
     LOGGER.warning(f"[crosslink] {message}")
 
