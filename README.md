@@ -1,67 +1,55 @@
-# mkdocs-badges
-[![PyPI version](https://img.shields.io/pypi/v/mkdocs-badges)](https://pypi.org/project/mkdocs-badges/)
-![License](https://img.shields.io/pypi/l/mkdocs-badges)
-![Python versions](https://img.shields.io/pypi/pyversions/mkdocs-badges)
+# mkdocs-crosslink-plugin
+[![PyPI version](https://img.shields.io/pypi/v/mkdocs-crosslink-plugin)](https://pypi.org/project/mkdocs-crosslink-plugin/)
+![License](https://img.shields.io/pypi/l/mkdocs-crosslink-plugin)
+![Python versions](https://img.shields.io/pypi/pyversions/mkdocs-crosslink-plugin)
 
-This package allows you to add badges to your mkdocs site.
+This package allows you to add links to other MkDocs (or similar page generator) sites.
 
-## Documentation
+## Usage
 
-This README is just a short intro to the package.
-For a quick start and detailed information please see the [documentation](https://mkdocs-badges.six-two.dev/).
-The documentation is also available in the `docs` folder of the source code and can be built localy with [MkDocs](https://www.mkdocs.org/).
+First install the PyPI package:
+```bash
+pip install mkdocs-crosslink-plugin
+```
+
+Add something like the following to your `mkdocs.yml`:
+```yaml
+plugins:
+- search
+- crosslink:
+    crosslinks:
+    - name: alpha
+      source_dir: site_a/docs
+      target_url: http://localhost:8000/site_a/
+      use_directory_urls: False
+    - name: "example"
+      source_dir: /var/www/html/example.com/
+      target_url: https://example.com/
+      use_directory_urls: True
+```
+
+Each crosslink has the following attributes:
+
+- `name`: How you reference the site.
+    By default the schema is `x-NAME:FILE_NAME` (so for example `x-alpha:my-image.png`).
+- `source_dir` is the directory containing the Markdown files.
+- `target_url` is the path, where the site corresponding to the `source_dir` files are hosted.
+- `use_directory_urls` should correspond to the target site's `use_directory_urls` settings.
+    - If enabled `path/index.md` will be mapped to `path/` and `path/test.md` will be mapped to `path/test/`.
+    - If disabled `path/index.md` will be mapped to `path/index.html` and `path/test.md` will be mapped to `path/test.html`.
+
+
+On your pages you can reference links and images to other sites with the `x-SITE_NAME:FILE_NAME` syntax.
+For example to load the image `my-image.png` somewhere from the `https://example.com/` (crosslink `example`) you would use the syntax:
+```markdown
+![My Image](x-example:my-image.png)
+```
+
+If multiple files with the exact same name exist, there is currently now way to reference the correct one.
+In the future I plan to let you specify a part of the path to select the correct file.
+
 
 ## Testing
 
-The documentation also serves as a test of the plugin.
-A hidden test page is available at `/test`.
-
-Build the documentation with the latest source code:
-```bash
-pip install . && mkdocs serve -t <theme>
-```
-
-Themes that sould work are `mkdocs`, `readthedocs`, and `material`.
-
-### Unit tests
-
-The github repository now contains some unit test.
-You can run them against the current code with the following command (issued in the root directory of the repository):
-
-```bash
-pip install . && python -m unittest
-```
-
-
-## Notable changes
-
-### 0.4.0
-
-- Now requires MkDocs 1.4 or newer
-- Updated the layout rules for badges. This should better handle oversized contents (like images or very long texts).
-
-### Version 0.3.4
-
-- Added single element badges
-
-### Version 0.3.3
-
-- Added tags badges
-
-### Version 0.3.1
-
-- Better error handling, fixed a crash
-- Started adding unit tests
-
-### Version 0.3.0
-
-- Breaking changes to the badges formats. See the [migration guide](https://mkdocs-badges.six-two.dev/migration/)
-- Added support for reference links
-
-### Version 0.2.0
-
-- Each badge now needs to be the only thing on its line
-- Badges inside code blocks are no longer parsed
-- The `|end` at the end of custom badges is no longer neccessary. A simple `|` is enough. This shorter form is recommended from now on.
-- Documentation is now in the `docs` folder in the form of a mkdocs website
-- Added link badges
+Some very basic tests are in `docs` (main site), `site_a` (crosslink alpha), and `site_b` (crosslink bravo).
+You can build and serve the test site by running `./build.sh`.
