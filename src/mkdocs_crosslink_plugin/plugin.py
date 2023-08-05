@@ -2,16 +2,13 @@ from pathlib import Path
 import re
 # pip dependency
 import mkdocs
-from mkdocs.config.config_options import Type
-from mkdocs.plugins import BasePlugin, event_priority
+from mkdocs.plugins import BasePlugin
 from mkdocs.config.base import Config
 from mkdocs.config.defaults import MkDocsConfig
 from mkdocs.structure.pages import Page
 from mkdocs.structure.files import Files
 # local files
-from . import warning
-from .file_cache import FileCache
-from .config import parse_crosslinks_list, CrosslinkPluginConfig
+from .config import parse_crosslinks_list, create_local_crosslink, CrosslinkPluginConfig
 from .replacer import Replacer
 
 
@@ -22,6 +19,9 @@ class CrosslinkPlugin(BasePlugin[CrosslinkPluginConfig]):
         It will make modify the config and initialize this plugin.
         """
         self.crosslinks = parse_crosslinks_list(self.config.crosslinks, "crosslinks")
+
+        local_crosslink = create_local_crosslink(config)
+        self.crosslinks.append(local_crosslink)
 
         self.replacer = Replacer(self.crosslinks, self.config)
         return config

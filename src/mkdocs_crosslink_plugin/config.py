@@ -2,6 +2,7 @@ from functools import wraps
 import json
 from pathlib import Path
 from typing import NamedTuple, Any, Callable
+from urllib.parse import urlparse
 # pip dependencies
 from mkdocs.config.base import Config
 from mkdocs.config.config_options import Type
@@ -67,12 +68,34 @@ def add_problematic_data_to_exceptions(function: Callable) -> Callable:
     return wrap
 
 
+def create_local_crosslink(mkdocs_config: Config) -> CrosslinkSite:
+    site_url = mkdocs_config.site_url #@TODO: only path
+    if not site_url:
+        target_url = "/"
+    else:
+        # We extract the path. this makes it so that if you use 'https://example.com/some/dir/' 
+        # the links will be to '/some/dir/path/to/file', so it will also work with 'mkdocs serve' and similar stuff
+        target_url = urlparse(site_url).path
+    return CrosslinkSite(
+        name="local",
+        source_dir=Path(mkdocs_config.docs_dir),
+        target_url=target_url,
+        use_directory_urls=mkdocs_config.use_directory_urls,
+    )
+
 @add_problematic_data_to_exceptions
 def parse_crosslinks_list(data_list: list[Any], location: str) -> list[CrosslinkSite]:
+    crosslink_list = []
     if data_list:
-        return [parse_crosslink(data, f"{location}[{index}]") for index, data in enumerate(data_list)]
-    else:
-        raise ConfigError("Crosslinks list must not be empty")
+        crosslink_list = [parse_crosslink(data, f"{location}[{index}]") for index, data in enumerate(data_list)]
+
+    return crosslink_list
+    # # Maybe gate this behind a flag?
+    # local_crosslink = CrosslinkSite(name="local", source_dir=con)
+    # crosslink_list
+    
+    # if not crosslink_list:
+    #     raise ConfigError("Crosslinks list must not be empty")
 
 
 @add_problematic_data_to_exceptions

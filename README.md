@@ -39,6 +39,8 @@ Each crosslink has the following attributes:
     - If disabled `path/index.md` will be mapped to `path/index.html` and `path/test.md` will be mapped to `path/test.html`.
 
 
+Starting with version 0.0.2 there is also a builtin `local` crosslink, which can be used to reference files in the current site, similar to other autolink tools.
+
 On your pages you can reference links and images to other sites with the `x-SITE_NAME:FILE_NAME` syntax.
 For example to load the image `my-image.png` somewhere from the `https://example.com/` (crosslink `example`) you would use the syntax:
 ```markdown
@@ -53,3 +55,9 @@ In the future I plan to let you specify a part of the path to select the correct
 
 Some very basic tests are in `docs` (main site), `site_a` (crosslink alpha), and `site_b` (crosslink bravo).
 You can build and serve the test site by running `./build.sh`.
+
+## Notable changes
+
+### HEAD
+
+- Added builtin `local` crosslink
