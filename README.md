@@ -49,7 +49,8 @@ For example to load the image `my-image.png` somewhere from the `https://example
 
 If multiple files with the exact same name exist, there is currently now way to reference the correct one.
 In the future I plan to let you specify a part of the path to select the correct file.
-
+From 0.0.2 on: For index files (`index.md` or `index.html`) you can reference them by the name of the parent's directory followed by a slash.
+So `/path/to/some/index.md` can be referenced as `some/`.
 
 ## Testing
 
@@ -61,3 +62,4 @@ You can build and serve the test site by running `./build.sh`.
 ### HEAD
 
 - Added builtin `local` crosslink
+- Reference `index.md` as `<PARENT_DIR_NAME>/`

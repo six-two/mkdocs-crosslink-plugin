@@ -1,6 +1,9 @@
 import json
 from pathlib import Path
 import os
+import re
+
+PATH_SEPARATOR_REGEX = re.compile(r"[/\\]+")
 
 class MultiValueDict:
     def __init__(self) -> None:
@@ -36,7 +39,17 @@ class FileCache:
     def _add_file_to_caches(self, path: Path, files_root: Path):
         if path.is_file():
             name = path.name
+            # Relative path with Unix path separators
             path_str = os.path.relpath(path, files_root)
+            path_str = normalize_path_str(path_str)
+
+            # Also register index files with the name of the directory.
+            # So you could reference /some/path/index.md as 'path/'
+            # Otherwise referencing index files is a real pain, since every one has the same name
+            if name == "index.md" or name == "index.html":
+                dir_name = path.parent.name if path.parent != files_root else ""
+                self._caches[0].append(f"{dir_name}/", path_str)
+
             # Add file name to caches
             for cache in self._caches:
                 cache.append(name, path_str)
@@ -48,9 +61,15 @@ class FileCache:
                     # There is nothing left to split off -> exit inner look
                     break
 
-    def get(self, key: str) -> list[str]:
+    def get_matches(self, pattern: str) -> list[str]:
         # Search the caches: first interpret it as a full file name, then as a file name without the last extension, then a filename without the last two extensions, etc
         # So for example "jquery" would match "jquery", "jquery.js", "jquery.min.js", and finally "jquery.min.js.bak" in that order
+        pattern = normalize_path_str(pattern)
+        if pattern.endswith("/"):
+            key = os.path.basename(pattern[:-1]) + "/"
+        else:
+            key = os.path.basename(pattern)
+        
         for cache in self._caches:
             if result := cache.get(key):
                 return result
@@ -61,3 +80,9 @@ class FileCache:
     def __str__(self) -> str:
         return "<FileCache>" + "".join([f"\t\nLevel {index}: {cache}" for index, cache in enumerate(self._caches)]) + "\n</FileCache>"
 
+
+def normalize_path_str(path: str) -> str:
+    """
+    This removes duplicate path separators and replaces backslashes with forward slashes
+    """
+    return PATH_SEPARATOR_REGEX.sub("/", path)

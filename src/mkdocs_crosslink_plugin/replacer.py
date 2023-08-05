@@ -86,11 +86,11 @@ class Replacer():
         if not os.path.isabs(file_path):
             # Relative path or just a file name. Look it up 
             # @TODO later: check the path and use it in case of duplicates?
-            name = os.path.basename(file_path)
+            # name = os.path.basename(file_path)
             cache = self.caches[crosslink_name]
-            results = cache.get(name)
+            results = cache.get_matches(file_path)
             if not results:
-                warning(f"({file_name}) Error resolving '{crosslink_url}'. Could not find a file called '{name}' in {cache.files_root}")
+                warning(f"({file_name}) Error resolving '{crosslink_url}'. Could not find a file matching '{file_path}' in {cache.files_root}")
                 return "#crosslink-error"
             elif len(results) == 1:
                 # Only one result -> use it

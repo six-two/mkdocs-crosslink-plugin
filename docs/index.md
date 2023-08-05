@@ -3,6 +3,8 @@
 ## Tests
 
 - [Local: Some other file](x-local:file.md)
+- [Local: Other index](x-local:other/)
+- [Local: This index](x-local:/)
 - [External: Index A](x-alpha:index.md)
 - [External: Index B](x-bravo:index.md)
 - [External: Page A](x-alpha:page_a.md)
