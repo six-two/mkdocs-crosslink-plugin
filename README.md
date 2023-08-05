@@ -3,7 +3,7 @@
 ![License](https://img.shields.io/pypi/l/mkdocs-crosslink-plugin)
 ![Python versions](https://img.shields.io/pypi/pyversions/mkdocs-crosslink-plugin)
 
-This package allows you to add links to other MkDocs (or similar page generator) sites.
+This package allows you to add links to other MkDocs sites (or sites created with similar page generator).
 
 ## Usage
 
@@ -59,7 +59,7 @@ You can build and serve the test site by running `./build.sh`.
 
 ## Notable changes
 
-### HEAD
+### HEAD (future version 0.0.2)
 
 - Added builtin `local` crosslink
 - Reference `index.md` as `<PARENT_DIR_NAME>/`

@@ -18,10 +18,13 @@ class CrosslinkPlugin(BasePlugin[CrosslinkPluginConfig]):
         Called once when the config is loaded.
         It will make modify the config and initialize this plugin.
         """
-        self.crosslinks = parse_crosslinks_list(self.config.crosslinks, "crosslinks")
+        self.crosslinks = {}
+        parse_crosslinks_list(self.config.crosslinks, "crosslinks", self.crosslinks)
 
+        # If not already created/overwritten by the user, provide a default value for 'local'
         local_crosslink = create_local_crosslink(config)
-        self.crosslinks.append(local_crosslink)
+        if local_crosslink.name not in self.crosslinks:
+            self.crosslinks[local_crosslink.name] = local_crosslink
 
         self.replacer = Replacer(self.crosslinks, self.config)
         return config

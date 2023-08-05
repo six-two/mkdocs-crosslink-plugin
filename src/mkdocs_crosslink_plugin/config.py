@@ -1,4 +1,5 @@
 from functools import wraps
+import glob
 import json
 from pathlib import Path
 from typing import NamedTuple, Any, Callable
@@ -50,6 +51,7 @@ class CrosslinkSite(NamedTuple):
     # yes: test.md -> test/
     # no: test.md -> test.html
     use_directory_urls: bool
+    # # In case multiple matching crosslinks are specified (by wildcards, defaults, etc) this will decide which one to use
 
 
 def add_problematic_data_to_exceptions(function: Callable) -> Callable:
@@ -69,13 +71,13 @@ def add_problematic_data_to_exceptions(function: Callable) -> Callable:
 
 
 def create_local_crosslink(mkdocs_config: Config) -> CrosslinkSite:
-    site_url = mkdocs_config.site_url #@TODO: only path
-    if not site_url:
-        target_url = "/"
-    else:
+    if mkdocs_config.site_url:
         # We extract the path. this makes it so that if you use 'https://example.com/some/dir/' 
         # the links will be to '/some/dir/path/to/file', so it will also work with 'mkdocs serve' and similar stuff
-        target_url = urlparse(site_url).path
+        target_url = urlparse(mkdocs_config.site_url).path
+    else:
+        target_url = "/"
+
     return CrosslinkSite(
         name="local",
         source_dir=Path(mkdocs_config.docs_dir),
@@ -84,22 +86,14 @@ def create_local_crosslink(mkdocs_config: Config) -> CrosslinkSite:
     )
 
 @add_problematic_data_to_exceptions
-def parse_crosslinks_list(data_list: list[Any], location: str) -> list[CrosslinkSite]:
-    crosslink_list = []
+def parse_crosslinks_list(data_list: list[Any], location: str, dict_to_modify: dict[str,CrosslinkSite]) -> None:
     if data_list:
-        crosslink_list = [parse_crosslink(data, f"{location}[{index}]") for index, data in enumerate(data_list)]
-
-    return crosslink_list
-    # # Maybe gate this behind a flag?
-    # local_crosslink = CrosslinkSite(name="local", source_dir=con)
-    # crosslink_list
-    
-    # if not crosslink_list:
-    #     raise ConfigError("Crosslinks list must not be empty")
+        for index, data in enumerate(data_list):
+            parse_crosslink(data, f"{location}[{index}]")
 
 
 @add_problematic_data_to_exceptions
-def parse_crosslink(data: Any, location: str) -> CrosslinkSite:
+def parse_crosslink(data: Any, location: str, dict_to_modify: dict[str,CrosslinkSite]) -> None:
     if type(data) != dict:
         raise ConfigError(f"Expected a dict, but got a {type(data).__name__}")
     
@@ -113,7 +107,18 @@ def parse_crosslink(data: Any, location: str) -> CrosslinkSite:
     if not (target_url.startswith("https://") or target_url.startswith("http://")):
         warning(f"URL '{target_url}' should probably start with 'https://' (or 'http://')")
 
-    return CrosslinkSite(name=name, source_dir=source_dir, target_url=target_url, use_directory_urls=use_directory_urls)
+    if "*" in source_dir and "*" in name and "*" in target_url:
+        # Allow globs for people like me, who store all/most projects in the same directory
+        # and do not want to define it manually for each one. Just be sure to use the same
+        # 'use_directory_urls' settings or define
+        for directory in glob.glob(source_dir):
+            star_value = "TODO: resume here"
+    else:
+        if name in dict_to_modify:
+            dict_to_modify[name] = CrosslinkSite(name=name, source_dir=source_dir, target_url=target_url, use_directory_urls=use_directory_urls)
+        else:
+            old = dict_to_modify[name]
+            raise ConfigError(f"A crosslink named '{name}' already exists: source_dir={old.source_dir}, target_url={old.target_url}")
 
 
 def get_string(data: dict, name: str) -> str:
