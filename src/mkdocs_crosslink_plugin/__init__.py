@@ -9,6 +9,9 @@ def debug(message: str) -> None:
 def warning(message: str) -> None:
     LOGGER.warning(f"[crosslink] {message}")
 
+def info(message: str) -> None:
+    LOGGER.info(f"[crosslink] {message}")
+
 # Import local files in the correct order
 # from .utils import replace_regex_matches
 # from .normal_badge import replace_normal_badges

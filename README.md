@@ -67,3 +67,4 @@ You can build and serve the test site by running `./build.sh`.
 - Added builtin `local` crosslink
 - Reference `index.md` as `<PARENT_DIR_NAME>/`
 - Added glob support for crosslinks
+- Added profiling option (`show_profiling_results: True`)

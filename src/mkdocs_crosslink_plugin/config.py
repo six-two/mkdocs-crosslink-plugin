@@ -22,6 +22,7 @@ CROSSLINK_FIELDS = {
 
 class CrosslinkPluginConfig(Config):
     enabled = Type(bool, default=True)
+    show_profiling_results = Type(bool, default=False)
     # Default pattern: x-NAME://link
     # This makes it look like a custom protocol, so no warnings should be raised
     prefix = Type(str, default="x-")

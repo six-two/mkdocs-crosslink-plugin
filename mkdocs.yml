@@ -12,6 +12,7 @@ nav:
 plugins:
 - search
 - crosslink:
+    show_profiling_results: True
     crosslinks:
     - name: alpha
       source_dir: site_a/docs
