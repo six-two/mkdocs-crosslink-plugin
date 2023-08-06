@@ -107,8 +107,8 @@ def parse_crosslink(data: Any, location: str, dict_to_modify: dict[str,Crosslink
     target_url = get_string(data, "target_url")
     use_directory_urls = get_bool(data, "use_directory_urls")
 
-    if not (target_url.startswith("https://") or target_url.startswith("http://")):
-        warning(f"URL '{target_url}' should probably start with 'https://' (or 'http://')")
+    if not (target_url.startswith("https://") or target_url.startswith("http://") or target_url.startswith("/")):
+        warning(f"URL '{target_url}' should probably start with 'https://', 'http://', or '/'")
 
     if has_wildcard(str(source_dir)) and has_wildcard(name) and has_wildcard(target_url):
         handle_glob_crosslink(name, source_dir, target_url, use_directory_urls, dict_to_modify)
