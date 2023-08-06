@@ -81,6 +81,10 @@ You can build and serve the test site by running `./build.sh`.
 
 ## Notable changes
 
+### Version 0.0.3
+
+- Just some bug fixes
+
 ### Version 0.0.2
 
 - Added builtin `local` crosslink
