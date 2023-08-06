@@ -17,7 +17,7 @@ plugins:
       source_dir: site_a/docs
       target_url: http://localhost:8000/site_a/
       use_directory_urls: False
-    # For causing errors (ambiguous protocol), do not do this in reallity
+    # For causing errors (ambiguous protocol), do not do this in reality
     - name: "alpha:2"
       source_dir: site_a/docs
       target_url: http://two.localhost:8000/site_a/
@@ -25,6 +25,15 @@ plugins:
     - name: "bravo"
       source_dir: site_b/docs
       target_url: http://localhost:8000/site_b
+      use_directory_urls: True
+    # Manually overwrite glob-a, since it uses use_directory_urls: False. Also test overwrite handling
+    - name: "glob-a"
+      source_dir: site_a/docs
+      target_url: http://localhost:8000/site_a
+      use_directory_urls: False
+    - name: "glob-*"
+      source_dir: site_*/docs
+      target_url: http://localhost:8000/site_*
       use_directory_urls: True
 
 

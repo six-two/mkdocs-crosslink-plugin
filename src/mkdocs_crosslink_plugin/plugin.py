@@ -3,22 +3,21 @@ import re
 # pip dependency
 import mkdocs
 from mkdocs.plugins import BasePlugin
-from mkdocs.config.base import Config
 from mkdocs.config.defaults import MkDocsConfig
 from mkdocs.structure.pages import Page
 from mkdocs.structure.files import Files
 # local files
-from .config import parse_crosslinks_list, create_local_crosslink, CrosslinkPluginConfig
+from .config import parse_crosslinks_list, create_local_crosslink, CrosslinkPluginConfig, CrosslinkSite
 from .replacer import Replacer
 
 
 class CrosslinkPlugin(BasePlugin[CrosslinkPluginConfig]):
-    def on_config(self, config: MkDocsConfig, **kwargs) -> Config:
+    def on_config(self, config: MkDocsConfig, **kwargs) -> MkDocsConfig:
         """
         Called once when the config is loaded.
         It will make modify the config and initialize this plugin.
         """
-        self.crosslinks = {}
+        self.crosslinks: dict[str,CrosslinkSite] = {}
         parse_crosslinks_list(self.config.crosslinks, "crosslinks", self.crosslinks)
 
         # If not already created/overwritten by the user, provide a default value for 'local'
@@ -26,7 +25,7 @@ class CrosslinkPlugin(BasePlugin[CrosslinkPluginConfig]):
         if local_crosslink.name not in self.crosslinks:
             self.crosslinks[local_crosslink.name] = local_crosslink
 
-        self.replacer = Replacer(self.crosslinks, self.config)
+        self.replacer = Replacer(list(self.crosslinks.values()), self.config) # @TODO: make it work with a dict?
         return config
 
 

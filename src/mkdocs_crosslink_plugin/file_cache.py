@@ -7,7 +7,7 @@ PATH_SEPARATOR_REGEX = re.compile(r"[/\\]+")
 
 class MultiValueDict:
     def __init__(self) -> None:
-        self._data = {}
+        self._data: dict[str,list[str]] = {}
 
     def append(self, key: str, value: str):
         if key in self._data:

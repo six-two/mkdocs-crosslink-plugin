@@ -16,4 +16,5 @@
 - [Warning: Ambiguous name](x-alpha:somelib)
 - ![External: Image A](x-alpha:my-image.png)
 - ![External: Image B](x-bravo:my-image.png)
-
+- [External: Glob A](x-glob-a:page_a1.md)
+- [External: Glob B](x-glob-b:page_a1.md)

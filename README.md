@@ -38,6 +38,9 @@ Each crosslink has the following attributes:
     - If enabled `path/index.md` will be mapped to `path/` and `path/test.md` will be mapped to `path/test/`.
     - If disabled `path/index.md` will be mapped to `path/index.html` and `path/test.md` will be mapped to `path/test.html`.
 
+Starting with version 0.0.2 you can also define multiple crosslinks at once, by using a glob-like syntax.
+Inject a `*` character in the `name`, `source_dir`, and `target_url`.
+The plugin will then look for directories matching the `source_dir` glob, create a crosslink for each one that was not defined before, and replace the `*` in the `name` and `target_url` with the same value that it matched in the `source_dir` value.
 
 Starting with version 0.0.2 there is also a builtin `local` crosslink, which can be used to reference files in the current site, similar to other autolink tools.
 
@@ -63,3 +66,4 @@ You can build and serve the test site by running `./build.sh`.
 
 - Added builtin `local` crosslink
 - Reference `index.md` as `<PARENT_DIR_NAME>/`
+- Added glob support for crosslinks

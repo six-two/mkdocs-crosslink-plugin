@@ -1,0 +1,5 @@
+- add profiling wrapper and test against a very large site
+    - add options to disable some regexes if it improves performance
+- add options to add custom regexes (like for `audio` elements)
+- idea: maybe add code that converts URLs to relative ones?
+- idea: maybe make it work with normale links too (like ezlinks)?

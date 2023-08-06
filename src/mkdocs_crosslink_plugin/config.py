@@ -1,14 +1,17 @@
 from functools import wraps
 import glob
 import json
+import os
 from pathlib import Path
+import re
 from typing import NamedTuple, Any, Callable
 from urllib.parse import urlparse
 # pip dependencies
 from mkdocs.config.base import Config
 from mkdocs.config.config_options import Type
+from mkdocs.config.defaults import MkDocsConfig
 # local
-from . import warning
+from . import warning, debug
 
 CROSSLINK_FIELDS = {
     "name",
@@ -70,7 +73,7 @@ def add_problematic_data_to_exceptions(function: Callable) -> Callable:
     return wrap
 
 
-def create_local_crosslink(mkdocs_config: Config) -> CrosslinkSite:
+def create_local_crosslink(mkdocs_config: MkDocsConfig) -> CrosslinkSite:
     if mkdocs_config.site_url:
         # We extract the path. this makes it so that if you use 'https://example.com/some/dir/' 
         # the links will be to '/some/dir/path/to/file', so it will also work with 'mkdocs serve' and similar stuff
@@ -89,7 +92,7 @@ def create_local_crosslink(mkdocs_config: Config) -> CrosslinkSite:
 def parse_crosslinks_list(data_list: list[Any], location: str, dict_to_modify: dict[str,CrosslinkSite]) -> None:
     if data_list:
         for index, data in enumerate(data_list):
-            parse_crosslink(data, f"{location}[{index}]")
+            parse_crosslink(data, f"{location}[{index}]", dict_to_modify)
 
 
 @add_problematic_data_to_exceptions
@@ -107,18 +110,57 @@ def parse_crosslink(data: Any, location: str, dict_to_modify: dict[str,Crosslink
     if not (target_url.startswith("https://") or target_url.startswith("http://")):
         warning(f"URL '{target_url}' should probably start with 'https://' (or 'http://')")
 
-    if "*" in source_dir and "*" in name and "*" in target_url:
-        # Allow globs for people like me, who store all/most projects in the same directory
-        # and do not want to define it manually for each one. Just be sure to use the same
-        # 'use_directory_urls' settings or define
-        for directory in glob.glob(source_dir):
-            star_value = "TODO: resume here"
+    if has_wildcard(str(source_dir)) and has_wildcard(name) and has_wildcard(target_url):
+        handle_glob_crosslink(name, source_dir, target_url, use_directory_urls, dict_to_modify)
     else:
         if name in dict_to_modify:
-            dict_to_modify[name] = CrosslinkSite(name=name, source_dir=source_dir, target_url=target_url, use_directory_urls=use_directory_urls)
-        else:
             old = dict_to_modify[name]
             raise ConfigError(f"A crosslink named '{name}' already exists: source_dir={old.source_dir}, target_url={old.target_url}")
+        else:
+            dict_to_modify[name] = CrosslinkSite(name=name, source_dir=source_dir, target_url=target_url, use_directory_urls=use_directory_urls)
+
+
+def handle_glob_crosslink(name: str, source_dir: Path, target_url: str, use_directory_urls: bool, dict_to_modify: dict[str,CrosslinkSite]) -> None:
+    # Allow globs for people like me, who store all/most projects in the same directory
+    # and do not want to define it manually for each one. Just be sure to use the same
+    # 'use_directory_urls' settings or define
+    # Native globs have some problems (other characters like '[', '?', etc) and extracting the value that star replaced is likely non-trivial
+    source_dir_str = str(source_dir).replace("\\", "/")
+    prefix_full, suffix_full = source_dir_str.split("*", 1)
+    prefix_dir, prefix_name = os.path.split(prefix_full)
+    if "/" in suffix_full:
+        suffix_name, suffix_child = suffix_full.split("/")
+    else:
+        suffix_name, suffix_child = suffix_full, ""
+
+    dir_name_regex = re.compile("^" + re.escape(prefix_name) + "(.+)" + re.escape(suffix_name) + "$")
+
+    for dir in Path(prefix_dir).iterdir():
+        match = dir_name_regex.match(dir.name)
+        if match and dir.is_dir():
+            # Seems to match and is a directory, lets also check with suffix_child
+            full_dir = dir.joinpath(suffix_child)
+            if full_dir.exists() and full_dir.is_dir():
+                star_value = match.group(1)
+                new_name = name.replace("*", star_value)
+                new_url = target_url.replace("*", star_value)
+
+                if new_name in dict_to_modify:
+                    # If one already exists just do nothing, it was probably added manually to overwrite this entry
+                    debug(f"glob expansion: Not adding '{new_name}' ({full_dir}), because it already points to {dict_to_modify[new_name].source_dir}")
+                else:
+                    # This crosslink does not yet exist -> add it
+                    debug(f"glob expansion: Adding '{new_name}' ({full_dir})")
+                    dict_to_modify[new_name] = CrosslinkSite(name=new_name, source_dir=full_dir, target_url=new_url,
+                                                             use_directory_urls=use_directory_urls)
+
+
+def has_wildcard(string: str) -> bool:
+    count = string.count("*")
+    if count > 1:
+        # More than one star: problematic, so we ignore it and print a warning
+        warning(f"String '{count}' contains {count} wildcard characters ('*), but should probably only contain a single one")
+    return count == 1
 
 
 def get_string(data: dict, name: str) -> str:
@@ -145,7 +187,10 @@ def get_bool(data: dict, name: str) -> bool:
 def get_directory_path(data: dict, name: str) -> Path:
     value = Path(get_string(data, name))
 
-    if value.exists():
+    if has_wildcard(str(value)):
+        # Do not check if the literal folder exists, if this is a wildcard path
+        return value
+    elif value.exists():
         if value.is_dir():
             return value
         else:
