@@ -62,7 +62,7 @@ You can build and serve the test site by running `./build.sh`.
 
 ## Notable changes
 
-### HEAD (future version 0.0.2)
+### Version 0.0.2
 
 - Added builtin `local` crosslink
 - Reference `index.md` as `<PARENT_DIR_NAME>/`
