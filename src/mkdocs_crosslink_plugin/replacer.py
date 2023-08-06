@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import re
+from typing import Optional
 import urllib
 # local files
 from . import warning, debug
@@ -38,7 +39,6 @@ class Replacer():
 
 
     def handle_page(self, file_name: str, html: str) -> str:
-        warning(f"({file_name}) Got page ({len(html)} bytes)")
         file_contents = html
         for regex in self.regexes:
             search_start_pos = 0
@@ -54,19 +54,11 @@ class Replacer():
 
     def handle_potential_occurence(self, file_name: str, html: str, match: re.Match) -> tuple[str,int]:
         # Return the updated document and the index to start the next search from
-        start, end = match.span()
-        
+        start, end = match.span()        
         url = match.group(1) # 0: full match, 1: first capture group, ...
-        proto_names = [name for name, full_name in self.full_name.items() if url.startswith(full_name)]
 
-        if proto_names:
-            if len(proto_names) > 1:
-                # Best effort match: take the first one (after sorting), similar to file ambiguities
-                proto_names = list(sorted(proto_names))
-                warning(f"({file_name}) Ambiguity resolving '{url}'. Multiple crosslink protocols match: {', '.join(proto_names)}")
-
-            # Perfect, only one fake protocol / is left. So let's replace it
-            crosslink_name = proto_names[0]
+        crosslink_name = self.get_proto_for_url(file_name, url)
+        if crosslink_name:
             new_url = self.resolve_crosslink(file_name, url, crosslink_name)
             new_url_updated = self.update_file_url_if_needed(new_url, crosslink_name)
             debug(f"Resolving: {url} -> {new_url} -> {new_url_updated}")
@@ -78,15 +70,51 @@ class Replacer():
         else:
             # No matches, seems to be a normal link
             return (html, start + 1)
+    
+    def get_proto_for_url(self, file_name: str, url: str) -> Optional[str]:
+        proto_name_list = [name for name, full_name in self.full_name.items() if url.startswith(full_name)]
+
+        if not proto_name_list:
+            # None of our protocols match, so we return None
+            return None
+        elif len(proto_name_list) == 1:
+            # Perfect, exactly one protocol matches -> return it
+            return proto_name_list[0]
+        else:
+            # Multiple protocols could match
+            # Best effort match: take the first one (after sorting) that can resolve a file, similar to file ambiguities
+            proto_name_list = list(sorted(proto_name_list))
+            warning(f"({file_name}) Ambiguity resolving '{url}'. Multiple crosslink protocols match: {', '.join(proto_name_list)}")
+            for proto_name in proto_name_list:
+                if self.can_resolve_crosslink(url, proto_name):
+                    debug(f"({file_name}) Ambiguity resolution for '{url}' chose protocol '{proto_name}'.")
+                    return proto_name
+            
+            # Ok, this is worse, none of the protocols match. The user must fix it
+            warning(f"({file_name}) Ambiguity resolution for '{url}' found no potential matches'.")
+            return None
+
+    def can_resolve_crosslink(self, crosslink_url: str, crosslink_name: str) -> bool:
+        """
+        This function check, whether a URL could be resolved given the protocol.
+        It can be used in case of protocol ambiguities to check which protocols are more likely (because they can resolve the file)
+        """
+        crosslink_proto = self.full_name[crosslink_name]
+        file_path = crosslink_url[len(crosslink_proto):] # Get everything after the proto.
+        if os.path.isabs(file_path):
+            # Absolute URL should work -> true
+            return True
+        else:
+            cache = self.caches[crosslink_name]
+            results = cache.get_matches(file_path)
+            # We do not care if there is an ambiguity in the file path, just whether there are results
+            return len(results) > 0
 
     def resolve_crosslink(self, file_name: str, crosslink_url: str, crosslink_name: str) -> str:
         base_url = self.crosslinks[crosslink_name].target_url
         crosslink_proto = self.full_name[crosslink_name]
         file_path = crosslink_url[len(crosslink_proto):] # Get everything after the proto.
         if not os.path.isabs(file_path):
-            # Relative path or just a file name. Look it up 
-            # @TODO later: check the path and use it in case of duplicates?
-            # name = os.path.basename(file_path)
             cache = self.caches[crosslink_name]
             results = cache.get_matches(file_path)
             if not results:

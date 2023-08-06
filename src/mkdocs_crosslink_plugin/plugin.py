@@ -30,7 +30,6 @@ class CrosslinkPlugin(BasePlugin[CrosslinkPluginConfig]):
 
 
     # @event_priority(50)
-    # Earlier than most other plugins to update the tags properly. Did not work
     # SEE https://www.mkdocs.org/dev-guide/plugins/#event-priorities
     def on_page_content(self, html: str, page: Page, config: MkDocsConfig, files: Files) -> str:
         """
@@ -39,8 +38,6 @@ class CrosslinkPlugin(BasePlugin[CrosslinkPluginConfig]):
         """
         try:
             html = self.replacer.handle_page(page.file.src_path, html)
-                
-
             return html
         except Exception as error:
             raise mkdocs.exceptions.PluginError(str(error))
