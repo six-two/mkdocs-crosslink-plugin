@@ -55,6 +55,9 @@ class Replacer():
         # Return the updated document and the index to start the next search from
         start, end = match.span()        
         url = match.group(1) # 0: full match, 1: first capture group, ...
+        # Some plugins like ezlinks enquote certain characters (like the ':' character used as prefix)
+        # So we need to unquote the URL before we try to inspect it
+        url = urllib.parse.unquote(url)
 
         crosslink_name = self.get_proto_for_url(file_name, url)
         if crosslink_name:

@@ -33,7 +33,7 @@ class Profiler:
             if count > 1:
                 # Statistics (min, max, avg, mean) only make sense when there are multiple values
                 sorted_time = list(sorted(time_list))
-                time_avg = sum(time_list)
+                time_avg = time_sum / count
                 time_min = sorted_time[0]
                 time_max = sorted_time[-1]
 
