@@ -55,6 +55,25 @@ In the future I plan to let you specify a part of the path to select the correct
 From 0.0.2 on: For index files (`index.md` or `index.html`) you can reference them by the name of the parent's directory followed by a slash.
 So `/path/to/some/index.md` can be referenced as `some/`.
 
+## Compatibility with other autolink plugins
+
+In theory, this plugin should work side by side with other autolink plugins.
+This is because the default schema `x-NAME:` is basically a fake URL schema that any other plugins should not touch.
+At the same time this plugin ignores normal links, which are processed by other autolink plugins.
+
+Known problems exist with [mkdocs-ezlinks-plugin](https://github.com/orbikm/mkdocs-ezlinks-plugin/) because it expects custom URL schemas to be followed by `//` (like `x-NAME://`) as can be seen by the [`mailto:` issue](https://github.com/orbikm/mkdocs-ezlinks-plugin/issues/48).
+You can work around this, by using links followed by a double slash and setting the correct suffix in the plugin settings:
+```yaml
+plugins:
+  - search
+  - crosslink:
+      suffix: "://"
+      crosslinks:
+      - name: "site_a"
+        ...
+```
+
+
 ## Testing
 
 Some very basic tests are in `docs` (main site), `site_a` (crosslink alpha), and `site_b` (crosslink bravo).

@@ -28,6 +28,8 @@ class Replacer():
         self.regexes += [re.compile(pattern, re_flags) for pattern in create_html_attribute_regex_patterns("a", "href")]
         self.regexes += [re.compile(pattern, re_flags) for pattern in create_html_attribute_regex_patterns("img", "src")]
 
+        self.prefix = config.prefix
+        debug(f"Schema is '{config.prefix}NAME{config.suffix}'")
         self.full_name = {}
         self.caches = {}
         self.crosslinks = {cl.name: cl for cl in crosslink_list}
@@ -54,16 +56,29 @@ class Replacer():
     def handle_potential_occurence(self, file_name: str, html: str, match: re.Match) -> tuple[str,int]:
         # Return the updated document and the index to start the next search from
         start, end = match.span()        
-        url = match.group(1) # 0: full match, 1: first capture group, ...
+        url_full = match.group(1) # 0: full match, 1: first capture group, ...
         # Some plugins like ezlinks enquote certain characters (like the ':' character used as prefix)
         # So we need to unquote the URL before we try to inspect it
-        url = urllib.parse.unquote(url)
+        url_full = urllib.parse.unquote(url_full)
+
+        if not url_full.startswith(self.prefix):
+            # Quickly bail out if it is definitely not for us
+            return (html, start + 1)
+
+        # If the URL ends with a hash (to jump to a section), we need to remove it and add it back after the URL is updated.
+        parts = url_full.split("#", 1)
+        if len(parts) == 2:
+            url = parts[0]
+            url_hash = "#" + parts[1]
+        else:
+            url = url_full
+            url_hash = ""
 
         crosslink_name = self.get_proto_for_url(file_name, url)
         if crosslink_name:
             new_url = self.resolve_crosslink(file_name, url, crosslink_name)
             new_url_updated = self.update_file_url_if_needed(new_url, crosslink_name)
-            debug(f"Resolving: {url} -> {new_url} -> {new_url_updated}")
+            debug(f"Resolving: {url_full} -> {new_url + url_hash} -> {new_url_updated + url_hash}")
 
             # update the URL
             updated_tag = html[start:end].replace(url, new_url_updated)
@@ -116,6 +131,7 @@ class Replacer():
         base_url = self.crosslinks[crosslink_name].target_url
         crosslink_proto = self.full_name[crosslink_name]
         file_path = crosslink_url[len(crosslink_proto):] # Get everything after the proto.
+        debug(f"Split URL: {crosslink_url} -> ({crosslink_proto}, {file_path})")
         if not os.path.isabs(file_path):
             cache = self.caches[crosslink_name]
             results = cache.get_matches(file_path)
