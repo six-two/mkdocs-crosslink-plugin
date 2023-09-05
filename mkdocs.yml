@@ -1,4 +1,5 @@
-site_name: mkdocs-badges
+site_name: mkdocs-crosslink-plugin
+repo_url: https://github.com/six-two/mkdocs-crosslink-plugin
 
 theme:
   name: material
@@ -6,7 +7,7 @@ theme:
     - content.code.copy
     - navigation.footer
 nav:
-# Hide the index page -> would otherwise result in two mkdocs-badges links
+# Hide the index page -> would otherwise result in two links to the main page
 - "": index.md
 
 plugins:
