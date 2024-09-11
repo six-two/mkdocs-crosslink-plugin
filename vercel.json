@@ -1,4 +1,7 @@
 {
+    "installCommand": "echo Nothing to do",
+    "buildCommand": "bash -x build.sh",
+    "outputDirectory": "public",
     "github": {
         "silent": true
     }
