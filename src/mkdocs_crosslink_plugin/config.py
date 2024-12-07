@@ -27,6 +27,8 @@ class CrosslinkPluginConfig(Config):
     prefix = Type(str, default="x-")
     suffix = Type(str, default=":")
     crosslinks = Type(list, default=[])
+    # Dangerous, because it modifies source files
+    dangerous_migrate_links = Type(bool, default=False)
 
 
 class ConfigError(Exception):

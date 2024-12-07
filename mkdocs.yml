@@ -14,6 +14,7 @@ plugins:
 - search
 - crosslink:
     show_profiling_results: True
+    dangerous_migrate_links: True
     crosslinks:
     - name: alpha
       source_dir: site_a/docs
